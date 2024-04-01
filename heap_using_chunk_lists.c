@@ -147,9 +147,8 @@ static void mark_region(const uintptr_t *start, const uintptr_t *end)
 
 void heap_collect()
 {
-    const uintptr_t *stack_start = (const uintptr_t*)__builtin_frame_address(0);
-    memset(reachable_chunks, 0, sizeof(reachable_chunks));
-    mark_region(stack_start, stack_base + 1);
+    const uintptr_t *stack_start = (coNode* Get(LinkedList* list, size_t size); 
+Node* se + 1);
 
     to_free_count = 0;
     for (size_t i = 0; i < alloced_chunks.count; ++i) {
