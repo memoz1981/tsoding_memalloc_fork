@@ -6,28 +6,38 @@ a start offset for the memory location and size of the memory (could be in bytes
 
 #ifndef LINKED_LIST_H_
 #define LINKED_LIST_H_
-
 #define MAX_CONCURRENT_ALLOCATIONS 1024
 #define MAX_MEMORY_TO_SUPPORT_HEAP 64000
 
-extern void* allocation_array[MAX_CONCURRENT_ALLOCATIONS];
+/*-------------------------LINKED LIST DECLARATION-------------------------------*/
 
-#include <stdbool.h>
+typedef struct Node Node;
 
-typedef struct {
+struct Node {
     int start_offset;
     size_t size;
-    struct Node* next; 
-    struct Node* previous; 
-} Node; 
+    Node* next; 
+    Node* previous; 
+};  
 
 typedef struct {
     Node* head; 
+    Node* tail; 
     int count; 
 } SortedLinkedList; 
 
-void AddNode(SortedLinkedList* list, void* value); 
+void AddNode(SortedLinkedList* list, Node* node); 
 void RemoveNode(SortedLinkedList* list, Node* node); 
-Node* FindNode(SortedLinkedList* list, Node* node);
+void AddNode(SortedLinkedList* list, Node* node); 
+void RemoveNode(SortedLinkedList* list, Node* node); 
+
+/*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
+
+extern SortedLinkedList list;
+extern int mem_alloc[MAX_CONCURRENT_ALLOCATIONS];
+extern Node node_alloc[MAX_CONCURRENT_ALLOCATIONS];
+
+extern int return_first_free_index(void);
+extern void mark_index_allocated(int index); 
 
 #endif
