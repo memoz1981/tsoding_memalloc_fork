@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "./heap.h"
+#include "./chunk_lists.h"
 
 #define JIM_IMPLEMENTATION
 #include "jim.h"
