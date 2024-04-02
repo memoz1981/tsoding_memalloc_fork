@@ -5,13 +5,16 @@
 #include "./linked_list.h"
 #include <assert.h>
 
+Node* initialize_head_node(void); 
+
 uintptr_t heap[HEAP_CAP_WORDS] = {0};
 const uintptr_t *stack_base = 0;
+size_t convert_bytes_to_words_size(size_t size_in_bytes);
 
 /*
 The intention is as below:
 1) Have a linked list to manage heap allocations - having linked list sorted will make the search 
-O(log2(n)) - this will keep Allocated Slots. 
+O(log2(n)) - this will keep Allocated Slots. Important note is linked list will hold empty spaces...
 2) Important Notes about the linked list:
 - Obviously since we are re-writing malloc function - we need to have a way to initialize the 
 linked list - as a start we will start with an array. As second stage, we would allocate the
@@ -19,80 +22,149 @@ linked list in the allocated memory for the heap.
 - How are we going to track the allocation of the linked list - since it will be a list 
 implemented on a memory array. We will need a fixed size array (int/bool) to track the allocation
 status of the list. -> by index (again considering this is implemented on the memory array)
-3) When adding / removing memory segments - we would need to check the linked list for current status
-4) When removing (allocating a memory slot) -> 
-a) first available slot will be returned
-b) if the slot size is larger than required, slot start will be adjusted. 
-5) When adding (re-instating the memory slot back to heap) -> 
-a) We need to find the correct location (O(log(n)))
-b) 
-*/
+3) When allocating memory segments (this would remove/modify a linked list node), 
+there can be 2 strategies to follow: 
+- Return first available time slot same or greater than required
+- Return the time slot that would optimally fit the request -> this will not be implemented, as
+would require O(n) with planned data structures. 
+4) When free'ing memory slots (this would add/modify a node)
+- a new node would be added to the linked list. 
+- at first stage the node will be added
+- as second stage, adjacent nodes would be checked, if possible those will be merged. 
+
+IMPORTANT NOTE: AIM IS TO MOVE THE DATA STRUCTURE ALLOCATION TO PART OF THE HEAP 
+ARRAY - SO WE HAVE AN ALTOGERHER ALLOCATION MANAGEMENT...
+THIS WILL BE DONE AS SECOND STAGE...*/
 
 /* ------------------------------ HEAP FUNCTIONS --------------------------------*/
+void *heap_alloc(size_t size_bytes)
+{
+    if(list.count >= MAX_CONCURRENT_ALLOCATIONS - 1)
+        return NULL; 
 
+    size_t size_in_words = convert_bytes_to_words_size(size_bytes);
+    
+    Node* node = FindNode(&list, size_in_words); 
 
+    if(node == NULL)
+        return NULL; 
+    
+    if(node->size_in_words == size_in_words)
+    {
+        MarkNodeAsAllocated(node); 
+        return node; 
+    }
 
-//Define 
+    //here it's clear that node size is greater than required
+    //thus we need to split it into two
+    //we would need to split the node into 2... 
 
-void *heap_alloc(size_t size_bytes);
-void heap_free(void *ptr);
-void heap_collect();
+    Node* emptyNode = alloc_node();
+
+    emptyNode->is_allocated = true;
+    emptyNode->next = node->next; 
+    emptyNode->previous = node;
+    emptyNode->size_in_words = size_in_words; 
+    emptyNode->start = node->start + (node->size_in_words - size_in_words); 
+
+    node->size_in_words = node->size_in_words - size_in_words; 
+    node->next = emptyNode; 
+    list.count++; 
+
+    return emptyNode->start; 
+}
+
+size_t convert_bytes_to_words_size(size_t size_in_bytes)
+{
+    size_t words = (size_t)size_in_bytes / (sizeof(uintptr_t));
+
+    if(size_in_bytes % sizeof(uintptr_t) != 0)
+        words++;
+
+    return words;  
+}
+
+void heap_free(void *ptr)
+{
+    
+}
+void heap_collect(); //at this stage this will not be implemented, not that necessary. 
 
 /* ------------------------------ LINKED LIST FUNCTIONS --------------------------------*/
 
-void AddNode(SortedLinkedList* list, Node* node)
+Node* FindNode(SortedLinkedList* list, size_t size_in_words)
 {
-    assert(list != NULL); 
-    assert(node != NULL); 
-
-    if(list->head == NULL)
-    {
-        list->head = node; 
-        list->tail = node; 
-        list->count++; 
-        return; 
-    }
-
     Node* temp = list->head; 
-
     while(temp != NULL)
     {
-        if(temp->next == NULL)
-            break; 
-
-        if(temp->next->start_offset > node->start_offset)
-            break; 
+        if(!temp->is_allocated && temp->size_in_words >= size_in_words)
+            return temp; 
+        
+        temp = temp->next; 
     }
-
-    node->previous = temp; 
-    node->next = temp->next; 
-    temp->next = node; 
-
-    list->count++; 
+    return temp; 
 }
 
-void RemoveNode(SortedLinkedList* list, Node* node); 
-
+void MarkNodeAsAllocated(Node* node)
+{
+    node->is_allocated = true; 
+}
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
-SortedLinkedList list = {.head = NULL, .tail = NULL, .count = 0}; 
+//this is the sorted linked list for 
+
+SortedLinkedList list = {.head = NULL, .count = 0}; 
 int mem_alloc[MAX_CONCURRENT_ALLOCATIONS] = {0};
-Node node_alloc[MAX_CONCURRENT_ALLOCATIONS] = {{.size=0, .start_offset=0, .next=NULL, .previous=NULL}};
-
-int return_first_free_index(void)
+Node node_alloc[MAX_CONCURRENT_ALLOCATIONS]  = 
 {
-    for(int i=0; i<MAX_CONCURRENT_ALLOCATIONS; i++)
     {
-        if(mem_alloc[i]==1)
-            return i; 
+        .is_allocated=false, 
+        .next = NULL,
+        .previous = NULL,
+        .size_in_words = 0,
+        .start = NULL, 
+        .allocated_index = 0
     }
-
-    return -1; 
+};
+void InitializeAllocators(void)
+{
+    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    {
+        node_alloc[i].allocated_index = i; 
+    }
+    list.head = initialize_head_node(); 
 }
 
-void mark_index_allocated(int index)
+Node* initialize_head_node(void)
 {
-    assert(index >=0 && index < MAX_CONCURRENT_ALLOCATIONS); 
-    assert(mem_alloc[index] == 0); 
-    mem_alloc[index] = 1; 
-} 
+    node_alloc[0].size_in_words = HEAP_CAP_WORDS;
+    node_alloc[0].start = &heap[0]; 
+    return &node_alloc[0];
+}
+
+Node* alloc_node(void)
+{
+    int i = 0; 
+    for(; i<MAX_CONCURRENT_ALLOCATIONS; i++)
+    {
+        if(mem_alloc[i] == 0) //corresponding node is free
+        {
+            break; 
+        }
+    }
+
+    if(i == MAX_CONCURRENT_ALLOCATIONS)
+        return NULL; 
+
+    node_alloc[i].allocated_index = i;
+    mem_alloc[i] = 1; //mark node as allocated
+
+    return &node_alloc[i];  
+}
+
+void de_alloc_node(Node* node)
+{
+    assert(node != NULL && node->allocated_index >= 0 && node->allocated_index < MAX_CONCURRENT_ALLOCATIONS); 
+
+    mem_alloc[node->allocated_index] = 0; 
+}

@@ -9,27 +9,32 @@ a start offset for the memory location and size of the memory (could be in bytes
 #define MAX_CONCURRENT_ALLOCATIONS 1024
 #define MAX_MEMORY_TO_SUPPORT_HEAP 64000
 
-/*-------------------------LINKED LIST DECLARATION-------------------------------*/
+#include <stdint.h>
+#include <stdbool.h>
+
+/*-------------------------LINKED LIST DECLARATION AND FUNCTIONS-------------------------------*/
 
 typedef struct Node Node;
 
 struct Node {
-    int start_offset;
-    size_t size;
+    uintptr_t* start;
+    size_t size_in_words;
     Node* next; 
     Node* previous; 
+    int allocated_index; 
+    bool is_allocated; 
 };  
 
 typedef struct {
     Node* head; 
-    Node* tail; 
     int count; 
 } SortedLinkedList; 
 
-void AddNode(SortedLinkedList* list, Node* node); 
-void RemoveNode(SortedLinkedList* list, Node* node); 
-void AddNode(SortedLinkedList* list, Node* node); 
-void RemoveNode(SortedLinkedList* list, Node* node); 
+// void AddNode(SortedLinkedList* list, Node* node); 
+// int RemoveNode(SortedLinkedList* list, Node* node); 
+Node* FindNode(SortedLinkedList* list, size_t size_in_words); 
+void MarkNodeAsAllocated(Node* node); 
+
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
 
@@ -37,7 +42,9 @@ extern SortedLinkedList list;
 extern int mem_alloc[MAX_CONCURRENT_ALLOCATIONS];
 extern Node node_alloc[MAX_CONCURRENT_ALLOCATIONS];
 
-extern int return_first_free_index(void);
-extern void mark_index_allocated(int index); 
+
+extern void InitializeAllocators(); 
+extern Node* alloc_node(void);
+extern void de_alloc_node(Node* node); 
 
 #endif
