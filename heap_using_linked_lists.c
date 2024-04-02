@@ -86,9 +86,17 @@ size_t convert_bytes_to_words_size(size_t size_in_bytes)
 
 void heap_free(void *ptr)
 {
-    
+    uintptr_t* casted = (uintptr_t*)ptr; 
+
+    int index = casted - list.head->start; 
+
+    node_alloc[index].is_allocated = false; 
+
+    //to-do --- combine with adjacent nodes...
+
+    mem_alloc[index] = 0;
 }
-void heap_collect(); //at this stage this will not be implemented, not that necessary. 
+void heap_collect() {} //at this stage this will not be implemented, not that necessary. 
 
 /* ------------------------------ LINKED LIST FUNCTIONS --------------------------------*/
 
