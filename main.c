@@ -3,87 +3,60 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #include "./heap.h"
 #include "./linked_list.h"
 
-// #define JIM_IMPLEMENTATION
-// #include "jim.h"
-
-// typedef struct Node Node;
-
-// struct Node {
-//     char x;
-//     Node *left;
-//     Node *right;
-// };
-
-// Node *generate_tree(size_t level_cur, size_t level_max)
-// {
-//     if (level_cur < level_max) {
-//         Node *root = heap_alloc(sizeof(*root));
-//         assert((char) level_cur - 'a' <= 'z');
-//         root->x = level_cur + 'a';
-//         root->left = generate_tree(level_cur + 1, level_max);
-//         root->right = generate_tree(level_cur + 1, level_max);
-//         return root;
-//     } else {
-//         return NULL;
-//     }
-// }
-
-// void print_tree(Node *root, Jim *jim)
-// {
-//     if (root != NULL) {
-//         jim_object_begin(jim);
-
-//         jim_member_key(jim, "value");
-//         jim_string_sized(jim, &root->x, 1);
-
-//         jim_member_key(jim, "left");
-//         print_tree(root->left, jim);
-
-//         jim_member_key(jim, "right");
-//         print_tree(root->right, jim);
-
-//         jim_object_end(jim);
-//     } else {
-//         jim_null(jim);
-//     }
-// }
-
-// #define N 10
-
-// void *ptrs[N] = {0};
+int run_cycle(void); 
 
 int main()
 {
-    // stack_base = (const uintptr_t*)__builtin_frame_address(0);
+    InitializeAllocators(); 
 
-    // for (size_t i = 0; i < 10; ++i) {
-    //     heap_alloc(i);
-    // }
+    int result = 0; 
 
-    // // Node *root = generate_tree(0, 3);
+    while(result != -1)
+    {
+        result = run_cycle(); 
+        print_linked_list(&list); 
+    }
+    
+}
 
-    // printf("root: %p\n", (void*)root);
+int run_cycle(void)
+{
+    printf("\n\n\nChoose one of the options below: \n");
+    printf("[c] to clear the screen\n");
+    printf("[a]_[size_in_bytes] to allocate...(a 10 will allocate 10 bytes)\n"); 
+    printf("[d]_[index] to de-allocate...(d 0 will de-allocate 0th index)\n"); 
+    printf("[e] to exit\n");
 
-    // Jim jim = {
-    //     .sink = stdout,
-    //     .write = (Jim_Write) fwrite,
-    // };
+    char command = '\0';
+    scanf("%c", &command); 
 
-    // print_tree(root, &jim);
+    if(command == 'e')
+        return -1; 
+    
+    if(command == 'c')
+        system("clear"); 
+    
+    if(command == 'a')
+    {
+        int num; 
+        scanf("Enter the size in bytes: %d", &num); 
 
-    // printf("\n------------------------------\n");
-    // heap_collect();
-    // // chunk_list_dump(&alloced_chunks, "Alloced");
-    // // chunk_list_dump(&freed_chunks, "Freed");
-    // printf("------------------------------\n");
-    // // root = NULL;
-    // heap_collect();
-    // // chunk_list_dump(&alloced_chunks, "Alloced");
-    // // chunk_list_dump(&freed_chunks, "Freed");
+        void * pointer = heap_alloc(num);
+        if(pointer == NULL)
+        {
+            printf("Memory could not be allocated...\n");
+            return -1; 
+        } 
 
-    // return 0;
+        printf("Memory with address %p was allocated.", pointer); 
+        return 0; 
+    }
+
+    
+    return 0; 
 }

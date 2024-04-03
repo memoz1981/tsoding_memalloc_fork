@@ -4,11 +4,10 @@
 #include "./heap.h"
 #include "./linked_list.h"
 #include <assert.h>
-
-Node* initialize_head_node(void); 
+#include "logger.h"
 
 uintptr_t heap[HEAP_CAP_WORDS] = {0};
-const uintptr_t *stack_base = 0;
+Node* initialize_head_node(void); 
 size_t convert_bytes_to_words_size(size_t size_in_bytes);
 
 /*
@@ -39,18 +38,21 @@ THIS WILL BE DONE AS SECOND STAGE...*/
 /* ------------------------------ HEAP FUNCTIONS --------------------------------*/
 void *heap_alloc(size_t size_bytes)
 {
+    printf("\nRequested to allocate heap of byte size %d\n", (int)size_bytes); 
     if(list.count >= MAX_CONCURRENT_ALLOCATIONS - 1)
         return NULL; 
 
     size_t size_in_words = convert_bytes_to_words_size(size_bytes);
-    
     Node* node = FindNode(&list, size_in_words); 
+
+    print_node(node); 
 
     if(node == NULL)
         return NULL; 
     
     if(node->size_in_words == size_in_words)
     {
+        printf("Node size %d is same as requested %d\n", (int)node->size_in_words, (int)size_in_words); 
         MarkNodeAsAllocated(node); 
         return node; 
     }
@@ -59,6 +61,7 @@ void *heap_alloc(size_t size_bytes)
     //thus we need to split it into two
     //we would need to split the node into 2... 
 
+    printf("Node size is greater than requested...\n"); 
     Node* emptyNode = alloc_node();
 
     emptyNode->is_allocated = true;
@@ -118,6 +121,25 @@ void MarkNodeAsAllocated(Node* node)
     node->is_allocated = true; 
 }
 
+void print_node(Node* node)
+{
+    printf("{start:%p, size_in_words: %d, allocated_index: %d, isAllocated: %d}",
+    (void*)node->start, (int)node->size_in_words, node->allocated_index, node->is_allocated); 
+}
+
+void print_linked_list(SortedLinkedList* list)
+{
+    printf("\nLinkedList: ");
+    Node* temp = list->head; 
+    while(temp != NULL)
+    {
+        print_node(temp); 
+        printf(" -> "); 
+        temp = temp->next; 
+    }
+    printf("NULL\n"); 
+}
+
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
 //this is the sorted linked list for 
 
@@ -147,11 +169,13 @@ Node* initialize_head_node(void)
 {
     node_alloc[0].size_in_words = HEAP_CAP_WORDS;
     node_alloc[0].start = &heap[0]; 
+    mem_alloc[0] = 1; 
     return &node_alloc[0];
 }
 
 Node* alloc_node(void)
 {
+    printf("\nRequested to allocate a node\n"); 
     int i = 0; 
     for(; i<MAX_CONCURRENT_ALLOCATIONS; i++)
     {
@@ -175,4 +199,20 @@ void de_alloc_node(Node* node)
     assert(node != NULL && node->allocated_index >= 0 && node->allocated_index < MAX_CONCURRENT_ALLOCATIONS); 
 
     mem_alloc[node->allocated_index] = 0; 
+}
+
+void print_allocations(void)
+{
+    printf("\nAllocations Array: ");
+    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    {
+        printf("{%d, %d}", i, mem_alloc[i]); 
+    }
+
+    printf("\nLinked List Allocations: ");
+    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    {
+        print_node(&node_alloc[i]); 
+    }
+    printf("\n"); 
 }

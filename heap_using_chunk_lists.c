@@ -90,6 +90,7 @@ void chunk_list_remove(Chunk_List *list, size_t index)
 
 void *heap_alloc(size_t size_bytes)
 {
+    printf("Received request to allocate size in bytes %d", (int)size_bytes); 
     const size_t size_words = (size_bytes + sizeof(uintptr_t) - 1) / sizeof(uintptr_t);
 
     if (size_words > 0) {
