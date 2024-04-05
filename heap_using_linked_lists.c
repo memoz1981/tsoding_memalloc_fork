@@ -62,7 +62,11 @@ void *heap_alloc(size_t size_bytes)
         printf("Memory with requested size doesn't exit.\n");
         return NULL; 
     }
-    
+
+    printf("Found space in node below: \n"); 
+    print_node(node); 
+    printf("\n"); 
+
     //check for exast match
     if(node->size_in_words == size_in_words)
     {
@@ -75,8 +79,17 @@ void *heap_alloc(size_t size_bytes)
     //thus we need to split it into two
     //we would need to split the node into 2... 
 
-    printf("Node size is greater than requested...\n"); 
     Node* emptyNode = alloc_node();
+
+    if(emptyNode == NULL)
+    {
+        printf("Error during memory allocation"); 
+        return NULL; 
+    }
+
+    printf("Will use following node to accommodate new allocation: \n");
+    print_node(emptyNode); 
+    printf("\n"); 
 
     emptyNode->is_allocated = true;
     emptyNode->next = node->next; 
@@ -103,16 +116,20 @@ size_t convert_bytes_to_words_size(size_t size_in_bytes)
 
 void heap_free(void *ptr)
 {
-    uintptr_t* casted = (uintptr_t*)ptr; 
+    Node* node = find_node_by_pointer(&list, ptr); 
 
-    int index = casted - list.head->start; 
+    if(node == NULL)
+    {
+        printf("Provided pointer is not valid. "); 
+        return; 
+    }
 
-    node_alloc[index].is_allocated = false; 
+    node->is_allocated = false; 
+    list.count_allocated--; 
 
-    //to-do --- combine with adjacent nodes...
-
-    mem_alloc[index] = 0;
+    //to-do --- combine with adjacent nodes...then can return node to the array... 
 }
+
 void heap_collect() {} //at this stage this will not be implemented, not that necessary. 
 
 /* ------------------------------ LINKED LIST FUNCTIONS --------------------------------*/
@@ -153,7 +170,7 @@ void print_node(Node* node)
 
 void print_linked_list(SortedLinkedList* list)
 {
-    printf("\nLinkedList: ");
+    printf("\nLinkedList: allocated count = %d\n", list->count_allocated);
     Node* temp = list->head; 
     while(temp != NULL)
     {
@@ -162,6 +179,21 @@ void print_linked_list(SortedLinkedList* list)
         temp = temp->next; 
     }
     printf("NULL\n"); 
+}
+
+Node* find_node_by_pointer(SortedLinkedList* list, void* ptr)
+{
+    uintptr_t* start = (uintptr_t*)ptr; 
+    Node* temp = list->head; 
+
+    while(temp != NULL)
+    {
+        if(temp->start == start)
+            return temp; 
+        
+        temp = temp->next; 
+    }
+    return NULL; 
 }
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
@@ -199,22 +231,16 @@ Node* initialize_head_node(void)
 
 Node* alloc_node(void)
 {
-    printf("\nRequested to allocate a node\n"); 
-    int i = 0; 
-    for(; i<MAX_CONCURRENT_ALLOCATIONS; i++)
+    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
     {
         if(mem_alloc[i] == 0) //corresponding node is free
         {
-            break; 
+            mem_alloc[i] = 1; //mark node as allocated
+            return &node_alloc[i];  
         }
     }
-
-    if(i == MAX_CONCURRENT_ALLOCATIONS)
-        return NULL; 
-
-    mem_alloc[i] = 1; //mark node as allocated
-
-    return &node_alloc[i];  
+    
+    return NULL; 
 }
 
 void de_alloc_node(Node* node)

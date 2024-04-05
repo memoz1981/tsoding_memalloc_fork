@@ -36,6 +36,7 @@ Node* FindNode(SortedLinkedList* list, size_t size_in_words);
 void MarkNodeAsAllocated(Node* node); 
 void print_node(Node* node); 
 void print_linked_list(SortedLinkedList* list); 
+Node* find_node_by_pointer(SortedLinkedList* list, void* ptr); 
 
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
