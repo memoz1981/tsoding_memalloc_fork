@@ -63,7 +63,7 @@ void *heap_alloc(size_t size_bytes)
         return NULL; 
     }
 
-    printf("Found space in node below: \n"); 
+    printf("Found memory  in node below: \n"); 
     print_node(node); 
     printf("\n"); 
 
@@ -100,6 +100,7 @@ void *heap_alloc(size_t size_bytes)
     node->size_in_words = node->size_in_words - size_in_words; 
     node->next = emptyNode; 
     list.count_allocated++; 
+    list.count_total++; 
 
     return emptyNode->start; 
 }
@@ -124,8 +125,7 @@ void heap_free(void *ptr)
         return; 
     }
 
-    node->is_allocated = false; 
-    list.count_allocated--; 
+    de_alloc_node(node); 
 
     //to-do --- combine with adjacent nodes...then can return node to the array... 
 }
@@ -170,7 +170,8 @@ void print_node(Node* node)
 
 void print_linked_list(SortedLinkedList* list)
 {
-    printf("\nLinkedList: allocated count = %d\n", list->count_allocated);
+    printf("\nLinkedList: count(total) = %d, count(all.)=%d, count(de-all.) = %d\n", 
+        list->count_total, list->count_allocated, list->count_de_allocated);
     Node* temp = list->head; 
     while(temp != NULL)
     {
@@ -198,7 +199,13 @@ Node* find_node_by_pointer(SortedLinkedList* list, void* ptr)
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
 
-SortedLinkedList list = {.head = NULL, .count_allocated = 0}; 
+SortedLinkedList list = 
+    {
+    .head = NULL, 
+    .count_allocated = 0,
+    .count_total = 0,
+    .count_de_allocated = 0
+    }; 
 int mem_alloc[MAX_NUMBER_OF_NODES] = {0};
 Node node_alloc[MAX_NUMBER_OF_NODES]  = 
 {
@@ -220,6 +227,8 @@ void InitializeAllocators(void)
         node_alloc[i].allocated_index = i; 
     }
     list.head = initialize_head_node(); 
+    list.count_total++; 
+    list.count_de_allocated++; 
 }
 
 Node* initialize_head_node(void)
@@ -251,10 +260,16 @@ void de_alloc_node(Node* node)
 
     assert(node != NULL 
     && node->allocated_index >= 0 
-    && node->allocated_index < array_size
-    && node->is_allocated == true
-    && mem_alloc[node->allocated_index] == 1); 
+    && node->allocated_index < array_size); 
 
+    if(node->is_allocated == false || mem_alloc[node->allocated_index] == 0)
+    {
+        printf("Invalid selection, node is not allocated. ");
+        return; 
+    }
+
+    list.count_allocated--;
+    list.count_de_allocated++; 
     mem_alloc[node->allocated_index] = 0; 
     node->is_allocated = false; 
 }
