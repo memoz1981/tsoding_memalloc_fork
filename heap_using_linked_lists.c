@@ -72,6 +72,8 @@ void *heap_alloc(size_t size_bytes)
     {
         printf("Node size %d is same as requested %d\n", (int)node->size_in_words, (int)size_in_words); 
         node->is_allocated = true; 
+        list.count_allocated++; 
+        list.count_de_allocated--; 
         return node; 
     }
 
@@ -92,10 +94,14 @@ void *heap_alloc(size_t size_bytes)
     printf("\n"); 
 
     emptyNode->is_allocated = true;
+    
     emptyNode->next = node->next; 
     emptyNode->previous = node;
     emptyNode->size_in_words = size_in_words; 
     emptyNode->start = node->start + (node->size_in_words - size_in_words); 
+
+    if(emptyNode->next != NULL)
+        emptyNode->next->previous = emptyNode; 
 
     node->size_in_words = node->size_in_words - size_in_words; 
     node->next = emptyNode; 
@@ -127,16 +133,28 @@ void heap_free(void *ptr)
 
     if(deAllocateNode(node) == false)
     {
+        printf("Failed to de-allocate the node\n"); 
         return; 
     }
 
+    printf("De-allocating node:\n"); 
+    printNode(node);
+    printf("Previous: \n");
+    printNode(node->previous);
+    printf("Next node: \n"); 
+    printNode(node->next); 
+    printf("\n"); 
+
     //check previous node - if both are free -> can be combined (to prevent de-fragmentation)
-    bool mergedWithPrevious = tryDeFragment(node->previous, node); 
+    Node* prev = node->previous; 
+    Node* next = node->next; 
+
+    bool mergedWithPrevious = tryDeFragment(prev, node); 
     
     if(mergedWithPrevious)
-        tryDeFragment(node->previous, node->next); 
+        tryDeFragment(prev, next); 
     else
-        tryDeFragment(node, node->next); 
+        tryDeFragment(node, next); 
 }
 
 void heap_collect() {} //at this stage this will not be implemented, not that necessary. 
@@ -160,16 +178,25 @@ Node* findNode(SortedLinkedList* list, size_t size_in_words)
 void printNode(Node* node)
 {
     if(node == NULL)
+    {
         printf("NULL"); 
-
-    Node* node_address = node; 
-    int node_address_offset = (int)(node_address - &node_alloc[0]);  
+        return; 
+    }
+        
 
     int start_offset = (int)(node->start - heap); 
+
+    int prevIndex = -1; 
+    int nextIndex = -1; 
+
+    if(node->previous != NULL)
+        prevIndex = node->previous->allocated_index; 
+
+    if(node->next != NULL)
+        nextIndex = node->next->allocated_index; 
     
-    printf("{start:%p, size_in_words: %d, allocated_index: %d, is_allocated: %d, node_address: %p, node_address_offset: %d, start_offset: %d}",
-    (void*)node->start, (int)node->size_in_words, node->allocated_index, node->is_allocated,
-    (void*)node_address, node_address_offset, start_offset); 
+    printf("{start:%d, size_in_words: %d, allocated_index: %d, is_allocated: %d, prevIndex: %d, nextIndex: %d}",
+    start_offset, (int)node->size_in_words, node->allocated_index, node->is_allocated, prevIndex, nextIndex); 
 }
 
 void printLinkedList(SortedLinkedList* list)
@@ -303,14 +330,40 @@ void printAllocations(void)
 
 bool tryDeFragment(Node* prev, Node* current)
 {
-    if(prev == NULL || current == NULL || prev->is_allocated == true 
-        || current->is_allocated == true)
+    //validations
+    if(prev == NULL || current == NULL)
+    {
+        printf("\nCannot merge NULL nodes...\n");
         return false; 
+    }
+
+    if(prev->is_allocated == true || current->is_allocated == true)
+    {
+        printf("\nOne of the nodes is allocated - cannot merge. prev allocated = %d, current allocated = %d\n", 
+        prev->is_allocated, current->is_allocated); 
+        return false; 
+    }
+
+    if(prev->allocated_index != current->previous->allocated_index || 
+    current->allocated_index != prev->next->allocated_index)
+    {
+        printf("\nNodes are not consequental: ");
+        printf("\nPrevious: "); 
+        printNode(prev); 
+        printf("\nCurrent: ");
+        printNode(current);
+        printf("\n"); 
+    }
+
+    printf("Requested to merge nodes %d and %d", prev->allocated_index, current->allocated_index); 
     
     int diff = (int)(current->start - prev->start); 
 
     if(diff != (int)prev->size_in_words)
+    {
+        printf("diff is %d, prev size is : %d", diff, (int)prev->size_in_words); 
         return false; 
+    }
     
     //we are ready to merge the nodes.
 
@@ -325,8 +378,14 @@ bool tryDeFragment(Node* prev, Node* current)
     current->start = NULL; 
     mem_alloc[current->allocated_index] = 0; 
 
+    //3. if next node is not NULL -> need to update the previous flag. 
+    if(prev->next != NULL)
+        prev->next->previous = prev; 
+
     list.count_total--; 
     list.count_de_allocated--; 
+
+    printf("De fragnment successful"); 
 
     return true; 
 }
