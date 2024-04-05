@@ -45,7 +45,8 @@ extern int mem_alloc[MAX_NUMBER_OF_NODES];
 extern Node node_alloc[MAX_NUMBER_OF_NODES];
 extern void initialize(void); 
 extern Node* allocateNode(void);
-extern void deAllocateNode(Node* node); 
+extern bool deAllocateNode(Node* node); 
 extern void printAllocations(void); 
+extern bool tryDeFragment(Node* prev, Node* current); //returns 0 if success. 
 
 #endif

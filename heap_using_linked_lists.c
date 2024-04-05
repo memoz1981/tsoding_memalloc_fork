@@ -121,13 +121,22 @@ void heap_free(void *ptr)
 
     if(node == NULL)
     {
-        printf("Provided pointer is not valid. "); 
+        printf("Provided pointer is not valid. \n"); 
         return; 
     }
 
-    deAllocateNode(node); 
+    if(deAllocateNode(node) == false)
+    {
+        return; 
+    }
 
-    //to-do --- combine with adjacent nodes...then can return node to the array... 
+    //check previous node - if both are free -> can be combined (to prevent de-fragmentation)
+    bool mergedWithPrevious = tryDeFragment(node->previous, node); 
+    
+    if(mergedWithPrevious)
+        tryDeFragment(node->previous, node->next); 
+    else
+        tryDeFragment(node, node->next); 
 }
 
 void heap_collect() {} //at this stage this will not be implemented, not that necessary. 
@@ -249,24 +258,29 @@ Node* allocateNode(void)
     return NULL; 
 }
 
-void deAllocateNode(Node* node)
+bool deAllocateNode(Node* node)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
 
-    assert(node != NULL 
-    && node->allocated_index >= 0 
-    && node->allocated_index < array_size); 
+    if(node->allocated_index < 0 || node->allocated_index >= array_size)
+    {
+        printf("Index out of bounds... ");
+        return false; 
+    }
 
     if(node->is_allocated == false || mem_alloc[node->allocated_index] == 0)
     {
         printf("Invalid selection, node is not allocated. ");
-        return; 
+        return false; 
     }
 
-    list.count_allocated--;
-    list.count_de_allocated++; 
     mem_alloc[node->allocated_index] = 0; 
     node->is_allocated = false; 
+    
+    list.count_allocated--; 
+    list.count_de_allocated++; 
+
+    return true; 
 }
 
 void printAllocations(void)
@@ -285,4 +299,34 @@ void printAllocations(void)
         printNode(&node_alloc[i]); 
     }
     printf("\n"); 
+}
+
+bool tryDeFragment(Node* prev, Node* current)
+{
+    if(prev == NULL || current == NULL || prev->is_allocated == true 
+        || current->is_allocated == true)
+        return false; 
+    
+    int diff = (int)(current->start - prev->start); 
+
+    if(diff != (int)prev->size_in_words)
+        return false; 
+    
+    //we are ready to merge the nodes.
+
+    //1. move node to previous
+    prev->next = current->next; 
+    prev->size_in_words += current->size_in_words; 
+    
+    //2. return node to array
+    current->next = NULL;
+    current->previous = NULL; 
+    current->size_in_words = 0; 
+    current->start = NULL; 
+    mem_alloc[current->allocated_index] = 0; 
+
+    list.count_total--; 
+    list.count_de_allocated--; 
+
+    return true; 
 }
