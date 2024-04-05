@@ -7,8 +7,8 @@
 #include "logger.h"
 
 uintptr_t heap[HEAP_CAP_WORDS] = {0};
-Node* initialize_head_node(void); 
-size_t convert_bytes_to_words_size(size_t size_in_bytes);
+Node* initializeHeadNode(void); 
+size_t convertBytesToWords(size_t size_in_byprint_allocationstes);
 
 /*
 The intention is as below:
@@ -52,9 +52,9 @@ void *heap_alloc(size_t size_bytes)
         return NULL; 
     }
 
-    size_t size_in_words = convert_bytes_to_words_size(size_bytes);
+    size_t size_in_words = convertBytesToWords(size_bytes);
     
-    Node* node = FindNode(&list, size_in_words); 
+    Node* node = findNode(&list, size_in_words); 
 
     //Validation 3 - check if any node could be allocated
     if(node == NULL)
@@ -64,14 +64,14 @@ void *heap_alloc(size_t size_bytes)
     }
 
     printf("Found memory  in node below: \n"); 
-    print_node(node); 
+    printNode(node); 
     printf("\n"); 
 
     //check for exast match
     if(node->size_in_words == size_in_words)
     {
         printf("Node size %d is same as requested %d\n", (int)node->size_in_words, (int)size_in_words); 
-        MarkNodeAsAllocated(node); 
+        node->is_allocated = true; 
         return node; 
     }
 
@@ -79,7 +79,7 @@ void *heap_alloc(size_t size_bytes)
     //thus we need to split it into two
     //we would need to split the node into 2... 
 
-    Node* emptyNode = alloc_node();
+    Node* emptyNode = allocateNode();
 
     if(emptyNode == NULL)
     {
@@ -88,7 +88,7 @@ void *heap_alloc(size_t size_bytes)
     }
 
     printf("Will use following node to accommodate new allocation: \n");
-    print_node(emptyNode); 
+    printNode(emptyNode); 
     printf("\n"); 
 
     emptyNode->is_allocated = true;
@@ -105,7 +105,7 @@ void *heap_alloc(size_t size_bytes)
     return emptyNode->start; 
 }
 
-size_t convert_bytes_to_words_size(size_t size_in_bytes)
+size_t convertBytesToWords(size_t size_in_bytes)
 {
     size_t words = (size_t)size_in_bytes / (sizeof(uintptr_t));
 
@@ -117,7 +117,7 @@ size_t convert_bytes_to_words_size(size_t size_in_bytes)
 
 void heap_free(void *ptr)
 {
-    Node* node = find_node_by_pointer(&list, ptr); 
+    Node* node = findNodeByPointer(&list, ptr); 
 
     if(node == NULL)
     {
@@ -125,7 +125,7 @@ void heap_free(void *ptr)
         return; 
     }
 
-    de_alloc_node(node); 
+    deAllocateNode(node); 
 
     //to-do --- combine with adjacent nodes...then can return node to the array... 
 }
@@ -134,7 +134,7 @@ void heap_collect() {} //at this stage this will not be implemented, not that ne
 
 /* ------------------------------ LINKED LIST FUNCTIONS --------------------------------*/
 
-Node* FindNode(SortedLinkedList* list, size_t size_in_words)
+Node* findNode(SortedLinkedList* list, size_t size_in_words)
 {
     Node* temp = list->head; 
     while(temp != NULL)
@@ -148,12 +148,7 @@ Node* FindNode(SortedLinkedList* list, size_t size_in_words)
     return NULL; 
 }
 
-void MarkNodeAsAllocated(Node* node)
-{
-    node->is_allocated = true; 
-}
-
-void print_node(Node* node)
+void printNode(Node* node)
 {
     if(node == NULL)
         printf("NULL"); 
@@ -168,21 +163,21 @@ void print_node(Node* node)
     (void*)node_address, node_address_offset, start_offset); 
 }
 
-void print_linked_list(SortedLinkedList* list)
+void printLinkedList(SortedLinkedList* list)
 {
     printf("\nLinkedList: count(total) = %d, count(all.)=%d, count(de-all.) = %d\n", 
         list->count_total, list->count_allocated, list->count_de_allocated);
     Node* temp = list->head; 
     while(temp != NULL)
     {
-        print_node(temp); 
+        printNode(temp); 
         printf(" -> "); 
         temp = temp->next; 
     }
     printf("NULL\n"); 
 }
 
-Node* find_node_by_pointer(SortedLinkedList* list, void* ptr)
+Node* findNodeByPointer(SortedLinkedList* list, void* ptr)
 {
     uintptr_t* start = (uintptr_t*)ptr; 
     Node* temp = list->head; 
@@ -219,19 +214,19 @@ Node node_alloc[MAX_NUMBER_OF_NODES]  =
     }
 };
 
-void InitializeAllocators(void)
+void initialize(void)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
     for(int i = 0; i < array_size; i++)
     {
         node_alloc[i].allocated_index = i; 
     }
-    list.head = initialize_head_node(); 
+    list.head = initializeHeadNode(); 
     list.count_total++; 
     list.count_de_allocated++; 
 }
 
-Node* initialize_head_node(void)
+Node* initializeHeadNode(void)
 {
     node_alloc[0].size_in_words = HEAP_CAP_WORDS;
     node_alloc[0].start = heap; 
@@ -239,7 +234,7 @@ Node* initialize_head_node(void)
     return &node_alloc[0];
 }
 
-Node* alloc_node(void)
+Node* allocateNode(void)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
     for(int i = 0; i < array_size; i++)
@@ -254,7 +249,7 @@ Node* alloc_node(void)
     return NULL; 
 }
 
-void de_alloc_node(Node* node)
+void deAllocateNode(Node* node)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
 
@@ -274,7 +269,7 @@ void de_alloc_node(Node* node)
     node->is_allocated = false; 
 }
 
-void print_allocations(void)
+void printAllocations(void)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
     printf("\nAllocations Array: ");
@@ -287,7 +282,7 @@ void print_allocations(void)
     for(int i = 0; i < array_size; i++)
     {
         printf("\n%d'th node: ", i); 
-        print_node(&node_alloc[i]); 
+        printNode(&node_alloc[i]); 
     }
     printf("\n"); 
 }

@@ -33,22 +33,19 @@ typedef struct {
     int count_de_allocated; 
 } SortedLinkedList; 
 
-Node* FindNode(SortedLinkedList* list, size_t size_in_words); 
-void MarkNodeAsAllocated(Node* node); 
-void print_node(Node* node); 
-void print_linked_list(SortedLinkedList* list); 
-Node* find_node_by_pointer(SortedLinkedList* list, void* ptr); 
+Node* findNode(SortedLinkedList* list, size_t size_in_words); 
+void printNode(Node* node); 
+void printLinkedList(SortedLinkedList* list); 
+Node* findNodeByPointer(SortedLinkedList* list, void* ptr); 
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
 
 extern SortedLinkedList list;
 extern int mem_alloc[MAX_NUMBER_OF_NODES];
 extern Node node_alloc[MAX_NUMBER_OF_NODES];
-extern void print_list(); 
-
-extern void InitializeAllocators(void); 
-extern Node* alloc_node(void);
-extern void de_alloc_node(Node* node); 
-extern void print_allocations(void); 
+extern void initialize(void); 
+extern Node* allocateNode(void);
+extern void deAllocateNode(Node* node); 
+extern void printAllocations(void); 
 
 #endif

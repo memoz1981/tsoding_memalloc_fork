@@ -8,28 +8,27 @@
 #include "./heap.h"
 #include "./linked_list.h"
 
-int run_cycle(void); 
-int read_integer(char* command);
+int run(void); 
+int readInteger(char* command);
 
 int main()
 {
-    InitializeAllocators(); 
+    initialize(); 
 
     int result = 0; 
 
     while(result != -1)
     {
-        result = run_cycle(); 
+        result = run(); 
         printf("Printing linked list: \n"); 
-        print_linked_list(&list); 
+        printLinkedList(&list); 
         printf("Printing allocations: \n"); 
-        
-        print_allocations(); 
+        printAllocations(); 
     }
     
 }
 
-int run_cycle(void)
+int run(void)
 {
     printf("\n\n\nChoose one of the options below: \n");
     printf("[c] to clear the screen\n");
@@ -48,7 +47,7 @@ int run_cycle(void)
     else if(command[0] == 'a')
     {
         system("clear"); 
-        int num = read_integer(command); 
+        int num = readInteger(command); 
 
         printf("Requested to allocate memory of %d bytes \n", num); 
 
@@ -64,7 +63,7 @@ int run_cycle(void)
     else if(command[0] == 'd')
     {
         system("clear"); 
-        int num = read_integer(command); 
+        int num = readInteger(command); 
 
         printf("Requested to free node with allocation index %d \n", num); 
 
@@ -80,7 +79,7 @@ int run_cycle(void)
     return 0; 
 }
 
-int read_integer(char* command)
+int readInteger(char* command)
 {
     int result = 0; 
 
