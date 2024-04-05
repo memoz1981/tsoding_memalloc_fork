@@ -9,6 +9,7 @@
 #include "./linked_list.h"
 
 int run_cycle(void); 
+int read_integer(char* command);
 
 int main()
 {
@@ -19,7 +20,11 @@ int main()
     while(result != -1)
     {
         result = run_cycle(); 
+        printf("Printing linked list: \n"); 
         print_linked_list(&list); 
+        printf("Printing allocations: \n"); 
+        
+        print_allocations(); 
     }
     
 }
@@ -28,35 +33,51 @@ int run_cycle(void)
 {
     printf("\n\n\nChoose one of the options below: \n");
     printf("[c] to clear the screen\n");
-    printf("[a]_[size_in_bytes] to allocate...(a 10 will allocate 10 bytes)\n"); 
-    printf("[d]_[index] to de-allocate...(d 0 will de-allocate 0th index)\n"); 
+    printf("[a]_[size_in_bytes] to allocate...(a_10 will allocate 10 bytes)\n"); 
+    printf("[d]_[index] to de-allocate...(d_0 will de-allocate 0th index)\n"); 
     printf("[e] to exit\n");
 
-    char command = '\0';
-    scanf("%c", &command); 
-
-    if(command == 'e')
+    char command[20];
+    memset(command, '\0', 20); 
+    scanf("%s", command); 
+    
+    if(strcmp("e", command) == 0)
         return -1; 
     
-    if(command == 'c')
+    else if(strcmp("c", command) == 0)
         system("clear"); 
     
-    if(command == 'a')
+    else if(command[0] == 'a')
     {
-        int num; 
-        scanf("Enter the size in bytes: %d", &num); 
+        int num = read_integer(command); 
 
         void * pointer = heap_alloc(num);
         if(pointer == NULL)
         {
             printf("Memory could not be allocated...\n");
-            return -1; 
+            return 0; 
         } 
 
         printf("Memory with address %p was allocated.", pointer); 
         return 0; 
     }
-
+    else
+    {
+        printf("Entered command %s is invalid", command); 
+    }
     
     return 0; 
+}
+
+int read_integer(char* command)
+{
+    int result = 0; 
+
+    for(int i =0; i<= (int)strlen(command); i++)
+    {
+        if(command[i] >=48 && command[i] <= 57)
+            result = result *10 + command[i] - 48; 
+    }
+
+    return result; 
 }

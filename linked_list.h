@@ -6,7 +6,7 @@ a start offset for the memory location and size of the memory (could be in bytes
 
 #ifndef LINKED_LIST_H_
 #define LINKED_LIST_H_
-#define MAX_CONCURRENT_ALLOCATIONS 4
+#define MAX_CONCURRENT_ALLOCATIONS 16
 #define MAX_MEMORY_TO_SUPPORT_HEAP 64000
 
 #include <stdint.h>
@@ -27,7 +27,7 @@ struct Node {
 
 typedef struct {
     Node* head; 
-    int count; 
+    int count_allocated; 
 } SortedLinkedList; 
 
 // void AddNode(SortedLinkedList* list, Node* node); 
