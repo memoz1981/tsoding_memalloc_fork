@@ -6,8 +6,9 @@ a start offset for the memory location and size of the memory (could be in bytes
 
 #ifndef LINKED_LIST_H_
 #define LINKED_LIST_H_
-#define MAX_CONCURRENT_ALLOCATIONS 16
+#define MAX_CONCURRENT_ALLOCATIONS 20
 #define MAX_MEMORY_TO_SUPPORT_HEAP 64000
+#define MAX_NUMBER_OF_NODES 20
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -30,8 +31,6 @@ typedef struct {
     int count_allocated; 
 } SortedLinkedList; 
 
-// void AddNode(SortedLinkedList* list, Node* node); 
-// int RemoveNode(SortedLinkedList* list, Node* node); 
 Node* FindNode(SortedLinkedList* list, size_t size_in_words); 
 void MarkNodeAsAllocated(Node* node); 
 void print_node(Node* node); 
@@ -42,8 +41,8 @@ Node* find_node_by_pointer(SortedLinkedList* list, void* ptr);
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
 
 extern SortedLinkedList list;
-extern int mem_alloc[MAX_CONCURRENT_ALLOCATIONS];
-extern Node node_alloc[MAX_CONCURRENT_ALLOCATIONS];
+extern int mem_alloc[MAX_NUMBER_OF_NODES];
+extern Node node_alloc[MAX_NUMBER_OF_NODES];
 extern void print_list(); 
 
 

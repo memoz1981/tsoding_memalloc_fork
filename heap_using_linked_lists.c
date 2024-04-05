@@ -197,11 +197,10 @@ Node* find_node_by_pointer(SortedLinkedList* list, void* ptr)
 }
 
 /*-------------------------FUNCTIONS/VARIABLES TO MANAGE THE HEAP-------------------------------*/
-//this is the sorted linked list for 
 
 SortedLinkedList list = {.head = NULL, .count_allocated = 0}; 
-int mem_alloc[MAX_CONCURRENT_ALLOCATIONS] = {0};
-Node node_alloc[MAX_CONCURRENT_ALLOCATIONS]  = 
+int mem_alloc[MAX_NUMBER_OF_NODES] = {0};
+Node node_alloc[MAX_NUMBER_OF_NODES]  = 
 {
     {
         .is_allocated=false, 
@@ -212,9 +211,11 @@ Node node_alloc[MAX_CONCURRENT_ALLOCATIONS]  =
         .allocated_index = 0
     }
 };
+
 void InitializeAllocators(void)
 {
-    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
+    for(int i = 0; i < array_size; i++)
     {
         node_alloc[i].allocated_index = i; 
     }
@@ -231,7 +232,8 @@ Node* initialize_head_node(void)
 
 Node* alloc_node(void)
 {
-    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
+    for(int i = 0; i < array_size; i++)
     {
         if(mem_alloc[i] == 0) //corresponding node is free
         {
@@ -245,7 +247,13 @@ Node* alloc_node(void)
 
 void de_alloc_node(Node* node)
 {
-    assert(node != NULL && node->allocated_index >= 0 && node->allocated_index < MAX_CONCURRENT_ALLOCATIONS); 
+    int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
+
+    assert(node != NULL 
+    && node->allocated_index >= 0 
+    && node->allocated_index < array_size
+    && node->is_allocated == true
+    && mem_alloc[node->allocated_index] == 1); 
 
     mem_alloc[node->allocated_index] = 0; 
     node->is_allocated = false; 
@@ -253,14 +261,15 @@ void de_alloc_node(Node* node)
 
 void print_allocations(void)
 {
+    int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
     printf("\nAllocations Array: ");
-    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    for(int i = 0; i < array_size; i++)
     {
         printf("{%d, %d}", i, mem_alloc[i]); 
     }
 
     printf("\nLinked List Allocations: ");
-    for(int i = 0; i < MAX_CONCURRENT_ALLOCATIONS; i++)
+    for(int i = 0; i < array_size; i++)
     {
         printf("\n%d'th node: ", i); 
         print_node(&node_alloc[i]); 
