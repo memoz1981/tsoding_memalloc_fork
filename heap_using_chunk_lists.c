@@ -1,8 +1,9 @@
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
-#include "./heap.h"
-#include "./chunk_lists.h"
+#include "heap.h"
+#include "chunk_lists.h"
 
 uintptr_t heap[HEAP_CAP_WORDS] = {0};
 const uintptr_t *stack_base = 0;
@@ -90,7 +91,6 @@ void chunk_list_remove(Chunk_List *list, size_t index)
 
 void *heap_alloc(size_t size_bytes)
 {
-    printf("Received request to allocate size in bytes %d", (int)size_bytes); 
     const size_t size_words = (size_bytes + sizeof(uintptr_t) - 1) / sizeof(uintptr_t);
 
     if (size_words > 0) {
@@ -148,8 +148,9 @@ static void mark_region(const uintptr_t *start, const uintptr_t *end)
 
 void heap_collect()
 {
-    const uintptr_t *stack_start = (coNode* Get(LinkedList* list, size_t size); 
-Node* se + 1);
+    const uintptr_t *stack_start = (const uintptr_t*)__builtin_frame_address(0);
+    memset(reachable_chunks, 0, sizeof(reachable_chunks));
+    mark_region(stack_start, stack_base + 1);
 
     to_free_count = 0;
     for (size_t i = 0; i < alloced_chunks.count; ++i) {
