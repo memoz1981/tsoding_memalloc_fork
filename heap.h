@@ -17,5 +17,6 @@ extern const uintptr_t *stack_base;
 void *heap_alloc(size_t size_bytes);
 void heap_free(void *ptr);
 void heap_collect();
+void run_tests(void); 
 
 #endif // HEAP_H_
