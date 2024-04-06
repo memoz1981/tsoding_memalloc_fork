@@ -244,6 +244,4 @@ void run_tests(void)
     heap_collect();
     chunk_list_dump(&alloced_chunks, "Alloced");
     chunk_list_dump(&freed_chunks, "Freed");
-
-    return 0;
 }

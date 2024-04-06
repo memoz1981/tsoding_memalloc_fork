@@ -4,8 +4,15 @@
 
 ## Quick Start
 
+### To run original implementation
 ```console
-$ make
+$ make chunk
+$ ./heap
+```
+
+### Alternative Implementation
+```console
+$ make linkedlist
 $ ./heap
 ```
 
@@ -16,7 +23,3 @@ $ ./heap
 - No tricks that obscure the pointers (like XOR Linked Lists).
 - Probably works only on x86_64
 - Probably works only when compiled with GCC
-
-## Linked List Implementation
-
-1) 
