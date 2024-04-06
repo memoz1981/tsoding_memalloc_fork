@@ -7,23 +7,25 @@
 
 #include "./heap.h"
 #include "./linked_list.h"
+#include "logger.h"
+
+#define MIN_LOG_LEVEL Information
 
 int run(void); 
 int readInteger(char* command);
 
 int main()
 {
-    initialize(); 
+    initialize(MIN_LOG_LEVEL); 
 
     int result = 0; 
 
     while(result != -1)
     {
         result = run(); 
-        printf("Printing linked list: \n"); 
+        logToConsole(Information, "Printing linked list: "); 
         printLinkedList(&list); 
-        printf("Printing allocations: \n"); 
-        printAllocations(); 
+        logToConsole(Information, "Printing allocations: "); 
     }
     
 }

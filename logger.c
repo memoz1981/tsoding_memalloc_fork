@@ -1,35 +1,50 @@
 #include <stdio.h>
 #include "logger.h"
 #include <string.h>
+#include <stdarg.h>
 
-void log_level(char* message, enum LogLevel level)
+enum LogLevel minimumLogLevel = Debug; 
+
+void setMinimumLogLevel(enum LogLevel logLevel)
 {
-    int length = strlen(message) + 20;
-    char* output = (char*)malloc(length * sizeof(char));
-    memset(output, 0, length); 
+    minimumLogLevel = logLevel; 
+}
 
+void logToConsole(enum LogLevel level, const char *format, ...)
+{
+    if((int)level < (int)minimumLogLevel)
+        return; 
+    
+    va_list argptr;
+    va_start(argptr, format);
+
+    int size = strlen(format) + 20; 
+    char formatNew[size];
+    memset(formatNew, '\0', size); 
+    strcat(formatNew, "\0"); 
     switch(level) {
         case Debug: 
-        strcat(output, "Debug: "); 
+        strcat(formatNew, "Debug: "); 
         break; 
 
         case Information: 
-        strcat(output, "Information: "); 
+        strcat(formatNew, "Information: "); 
         break; 
 
         case Warning: 
-        strcat(output, "Warning: "); 
+        strcat(formatNew, "Warning: "); 
         break; 
 
         case Error: 
-        strcat(output, "Error: "); 
+        strcat(formatNew, "Error: "); 
         break; 
 
         default:
         break; 
     }
+    strcat(formatNew, format); 
+    strcat(formatNew, "\0"); 
 
-    strcat(output, message); 
-
-    puts(output); 
+    vfprintf(stdout, formatNew, argptr);
+    va_end(argptr);
 }

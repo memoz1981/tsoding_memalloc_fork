@@ -5,6 +5,7 @@
 #include "./linked_list.h"
 #include <assert.h>
 #include "logger.h"
+#include <stdarg.h>
 
 uintptr_t heap[HEAP_CAP_WORDS] = {0};
 Node* initializeHeadNode(void); 
@@ -41,7 +42,8 @@ void *heap_alloc(size_t size_bytes)
     //Validation 1 - size should be greater than zero
     if(size_bytes <= 0)
     {
-        printf("\nInvalid request, size should be greater than or equal to zero.\n");
+        logToConsole(Information, "Invalid request, size should be greater than or equal to zero.\n"); 
+        
         return NULL; 
     }
 
@@ -250,7 +252,7 @@ Node node_alloc[MAX_NUMBER_OF_NODES]  =
     }
 };
 
-void initialize(void)
+void initialize(enum LogLevel minimumLogLevel)
 {
     int array_size = sizeof(node_alloc)/sizeof(node_alloc[0]); 
     for(int i = 0; i < array_size; i++)
@@ -260,6 +262,7 @@ void initialize(void)
     list.head = initializeHeadNode(); 
     list.count_total++; 
     list.count_de_allocated++; 
+    setMinimumLogLevel(minimumLogLevel); 
 }
 
 Node* initializeHeadNode(void)

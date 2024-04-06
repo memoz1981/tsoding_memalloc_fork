@@ -12,6 +12,7 @@ a start offset for the memory location and size of the memory (could be in bytes
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "logger.h"
 
 /*-------------------------LINKED LIST DECLARATION AND FUNCTIONS-------------------------------*/
 
@@ -43,7 +44,7 @@ Node* findNodeByPointer(SortedLinkedList* list, void* ptr);
 extern SortedLinkedList list;
 extern int mem_alloc[MAX_NUMBER_OF_NODES];
 extern Node node_alloc[MAX_NUMBER_OF_NODES];
-extern void initialize(void); 
+void initialize(enum LogLevel minimumLogLevel); 
 extern Node* allocateNode(void);
 extern bool deAllocateNode(Node* node); 
 extern void printAllocations(void); 
