@@ -50,7 +50,7 @@ void *heap_alloc(size_t size_bytes)
     //Validation 2 - we shouldn't have more than Max     
     if(list.count_allocated >= MAX_CONCURRENT_ALLOCATIONS)
     {
-        printf("Currently there are %d allocations - we cannot have more than that\n", list.count_allocated);
+        logToConsole(Warning, "Currently there are %d allocations - we cannot have more than that\n", list.count_allocated);
         return NULL; 
     }
 
@@ -61,18 +61,17 @@ void *heap_alloc(size_t size_bytes)
     //Validation 3 - check if any node could be allocated
     if(node == NULL)
     {
-        printf("Memory with requested size doesn't exit.\n");
+        logToConsole(Error, "Memory with requested size doesn't exit.\n");
         return NULL; 
     }
 
-    printf("Found memory  in node below: \n"); 
+    logToConsole(Debug, "Found memory  in node below: \n"); 
     printNode(node); 
-    printf("\n"); 
 
     //check for exast match
     if(node->size_in_words == size_in_words)
     {
-        printf("Node size %d is same as requested %d\n", (int)node->size_in_words, (int)size_in_words); 
+        logToConsole(Debug, "Node size %d is same as requested %d\n", (int)node->size_in_words, (int)size_in_words); 
         node->is_allocated = true; 
         list.count_allocated++; 
         list.count_de_allocated--; 
@@ -87,13 +86,12 @@ void *heap_alloc(size_t size_bytes)
 
     if(emptyNode == NULL)
     {
-        printf("Error during memory allocation"); 
+        logToConsole(Error, "Error during memory allocation"); 
         return NULL; 
     }
 
-    printf("Will use following node to accommodate new allocation: \n");
+    logToConsole(Debug, "Will use following node to accommodate new allocation: \n");
     printNode(emptyNode); 
-    printf("\n"); 
 
     emptyNode->is_allocated = true;
     
@@ -129,23 +127,22 @@ void heap_free(void *ptr)
 
     if(node == NULL)
     {
-        printf("Provided pointer is not valid. \n"); 
+        logToConsole(Error, "Provided pointer is not valid. \n"); 
         return; 
     }
 
     if(deAllocateNode(node) == false)
     {
-        printf("Failed to de-allocate the node\n"); 
+        logToConsole(Error, "Failed to de-allocate the node\n"); 
         return; 
     }
 
-    printf("De-allocating node:\n"); 
+    logToConsole(Debug, "De-allocating node:\n"); 
     printNode(node);
-    printf("Previous: \n");
+    logToConsole(Debug, "Previous: \n");
     printNode(node->previous);
-    printf("Next node: \n"); 
+    logToConsole(Debug, "Next node: \n"); 
     printNode(node->next); 
-    printf("\n"); 
 
     //check previous node - if both are free -> can be combined (to prevent de-fragmentation)
     Node* prev = node->previous; 
@@ -336,13 +333,13 @@ bool tryDeFragment(Node* prev, Node* current)
     //validations
     if(prev == NULL || current == NULL)
     {
-        printf("\nCannot merge NULL nodes...\n");
+        logToConsole(Information, "\nCannot merge NULL nodes...\n");
         return false; 
     }
 
     if(prev->is_allocated == true || current->is_allocated == true)
     {
-        printf("\nOne of the nodes is allocated - cannot merge. prev allocated = %d, current allocated = %d\n", 
+        logToConsole(Information, "\nOne of the nodes is allocated - cannot merge. prev allocated = %d, current allocated = %d\n", 
         prev->is_allocated, current->is_allocated); 
         return false; 
     }
@@ -350,7 +347,7 @@ bool tryDeFragment(Node* prev, Node* current)
     if(prev->allocated_index != current->previous->allocated_index || 
     current->allocated_index != prev->next->allocated_index)
     {
-        printf("\nNodes are not consequental: ");
+        logToConsole(Warning, "\nNodes are not consequental: ");
         printf("\nPrevious: "); 
         printNode(prev); 
         printf("\nCurrent: ");
@@ -364,7 +361,7 @@ bool tryDeFragment(Node* prev, Node* current)
 
     if(diff != (int)prev->size_in_words)
     {
-        printf("diff is %d, prev size is : %d", diff, (int)prev->size_in_words); 
+        logToConsole(Warning, "diff is %d, prev size is : %d", diff, (int)prev->size_in_words); 
         return false; 
     }
     
@@ -388,7 +385,7 @@ bool tryDeFragment(Node* prev, Node* current)
     list.count_total--; 
     list.count_de_allocated--; 
 
-    printf("De fragnment successful"); 
+    logToConsole(Debug, "De fragnment successful"); 
 
     return true; 
 }

@@ -21,7 +21,7 @@ void logToConsole(enum LogLevel level, const char *format, ...)
     int size = strlen(format) + 20; 
     char formatNew[size];
     memset(formatNew, '\0', size); 
-    strcat(formatNew, "\0"); 
+    strcat(formatNew, "\n"); 
     switch(level) {
         case Debug: 
         strcat(formatNew, "Debug: "); 
